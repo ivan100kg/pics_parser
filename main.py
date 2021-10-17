@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Comparison of linear and asynchronous parser"""
-
 
 def main():
     """main function"""
