@@ -2,5 +2,8 @@
 
 ### Install dependencies
 ```shell
-pip install requests beautifulsoup4 lxml
+pip --upgrade pip
+pip install requests 
+pip install beautifulsoup4
+pip install lxml
 ```
