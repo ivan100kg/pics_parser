@@ -1,6 +1,6 @@
 # pics_parser
 
-install dependencies
+### Install dependencies
 ```shell
 pip install requests beautifulsoup4 lxml
 ```
