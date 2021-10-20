@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+import asyncio
+import functools
 import sys
+from contextlib import contextmanager
 
 import requests
 from bs4 import BeautifulSoup
@@ -9,13 +12,39 @@ from datetime import datetime
 
 
 def timer(foo):
-    """function-decorator"""
+    """function-decorator for sync functions"""
+
     def wrapper(*args, **kwargs):
         print(f'Start {foo.__name__}')
         start = datetime.now()
         result = foo(*args, **kwargs)
         print(f'{foo.__name__} is finished - execution time: {datetime.now() - start}')
         return result
+
+    return wrapper
+
+
+def a_timer(foo):
+    """function-decorator for async functions"""
+
+    @contextmanager
+    def wrapping_logic():
+        start = datetime.now()
+        yield
+        print(f'{foo.__name__} is finished - execution time: {datetime.now() - start}')
+
+    @functools.wraps(foo)
+    def wrapper(*args, **kwargs):
+        if not asyncio.iscoroutinefunction(foo):
+            with wrapping_logic():
+                return foo(*args, **kwargs)
+        else:
+            async def tmp():
+                with wrapping_logic():
+                    return await foo(*args, **kwargs)
+
+            return tmp()
+
     return wrapper
 
 
@@ -29,9 +58,9 @@ def get_response(url):
         return None
 
 
+@a_timer
 async def async_func():
-    """asynchronous function"""
-    pass
+    await asyncio.sleep(2)
 
 
 @timer
@@ -77,4 +106,5 @@ def sync_func():
 
 
 if __name__ == '__main__':
-    sync_func()
+    asyncio.run(async_func())
+    # sync_func()
