@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from os.path import basename
+import sys
 
 import requests
 from bs4 import BeautifulSoup
 import os
+from os.path import basename
 from datetime import datetime
 
 
@@ -41,7 +42,11 @@ def sync_func():
     url = 'https://ivash-ka.ru'
     women_clothes = '/catalog/zhenskoe/'
     pic_dir = 'images/'
+
     request = get_response(url + women_clothes)
+    if not request:
+        print("Wrong url")
+        sys.exit()
     soup = BeautifulSoup(request.text, 'lxml')
 
     # check dir
@@ -60,9 +65,9 @@ def sync_func():
             os.mkdir(pic_dir + dir_name)
         # getting responses from pages and search images
         request = get_response(category_url)
+        if not request:
+            continue
         soup = BeautifulSoup(request.text, 'lxml')
-        # catalog_list = soup.find('div', {'class': 'catalog_list'})
-        # tag_pics = catalog_list.find_all('img', {'class': 'lazy'})
         tag_pics = soup.find_all('img', {'class': 'lazy'})
         # save images to storage
         for pic in tag_pics:
