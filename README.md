@@ -1,5 +1,5 @@
 # pics_parser
-parser comparing 
+parser comparsion 
 ### Install dependencies
 ```shell
 pip install --upgrade pip
