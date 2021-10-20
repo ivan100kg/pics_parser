@@ -18,6 +18,9 @@ def main():
     """main function"""
     url = 'https://ivash-ka.ru'
 
+    if not os.path.exists('images/'):
+        os.mkdir('images/')
+
     request = get_response(url + '/catalog/zhenskoe/')
     soup = BeautifulSoup(request.text, 'lxml')
 
