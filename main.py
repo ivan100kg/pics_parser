@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 import asyncio
 import functools
-import sys
 from contextlib import contextmanager
+from time import time
 
+import aiohttp
 import requests
-from bs4 import BeautifulSoup
-import os
 from os.path import basename
 from datetime import datetime
 
 
+# variables
+IMG_DIR = 'images/'
+URL = 'https://loremflickr.com/320/240'
+
+
+# decorators --------------------------------------------------------------------------
 def timer(foo):
     """function-decorator for sync functions"""
 
@@ -29,6 +34,7 @@ def a_timer(foo):
 
     @contextmanager
     def wrapping_logic():
+        print(f'Start {foo.__name__}')
         start = datetime.now()
         yield
         print(f'{foo.__name__} is finished - execution time: {datetime.now() - start}')
@@ -48,63 +54,48 @@ def a_timer(foo):
     return wrapper
 
 
-def get_response(url):
-    """This function returns response from url"""
-    request = requests.get(url, headers={
-        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36'})
-    if request.status_code < 400:
-        return request
-    else:
-        return None
+# functions----------------------------------------------------------------------------
+# synchronous functions
+def get_file(url):
+    response = requests.get(url, allow_redirects=True)
+    return response
 
 
-@a_timer
-async def async_func():
-    await asyncio.sleep(2)
+def write_file(response):
+    filename = basename(response.url)
+    with open(IMG_DIR + filename, 'wb') as f:
+        f.write(response.content)
 
 
 @timer
-def sync_func():
-    """synchronous function"""
+def main_s():
+    for i in range(10):
+        write_file(get_file(url=URL))
 
-    # set variables
-    url = 'https://ivash-ka.ru'
-    women_clothes = '/catalog/zhenskoe/'
-    pic_dir = 'images/'
 
-    request = get_response(url + women_clothes)
-    if not request:
-        print("Wrong url")
-        sys.exit()
-    soup = BeautifulSoup(request.text, 'lxml')
+# asynchronous functions
+def write_image(data):
+    filename = f'{int(time()*1000)}.jpeg'
+    with open(IMG_DIR + filename, 'wb') as f:
+        f.write(data)
 
-    # check dir
-    if not os.path.exists(pic_dir):
-        os.mkdir(pic_dir)
 
-    # image search
-    tag_links = soup.find_all('a', {'class': 'name'})
-    data = []  # list of (category name, category url)
-    [data.append((tag_link.text.strip(), url + tag_link.get('href'))) for tag_link in tag_links]
-    # get name and url from data
-    for category_name, category_url in data:
-        dir_name = category_name
-        # check dirs
-        if not os.path.exists(pic_dir + dir_name):
-            os.mkdir(pic_dir + dir_name)
-        # getting responses from pages and search images
-        request = get_response(category_url)
-        if not request:
-            continue
-        soup = BeautifulSoup(request.text, 'lxml')
-        tag_pics = soup.find_all('img', {'class': 'lazy'})
-        # save images to storage
-        for pic in tag_pics:
-            src = url + pic.get('data-original')
-            with open(f'{pic_dir}{dir_name}/{basename(src)}', 'wb') as f:
-                f.write(requests.get(src).content)
+async def fetch_content(url, session):
+    async with session.get(url) as response:
+        data = await response.read()
+        write_image(data)
+
+
+@a_timer
+async def main_a():
+    tasks = []
+    async with aiohttp.ClientSession() as session:
+        for i in range(10):
+            tasks.append(asyncio.create_task(fetch_content(URL, session)))
+
+        await asyncio.gather(*tasks)
 
 
 if __name__ == '__main__':
-    asyncio.run(async_func())
-    # sync_func()
+    main_s()
+    asyncio.run(main_a())
