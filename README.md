@@ -1,5 +1,5 @@
 # pics_parser
-Сomparsion of parsers
+Compare Synchronous vs Asynchronous parsers
 ### Install dependencies
 ```shell
 pip install --upgrade pip
