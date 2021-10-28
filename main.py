@@ -69,6 +69,7 @@ def write_file(response):
 
 @timer
 def main_s():
+    """main synchronous function"""
     for i in range(10):
         write_file(get_file(url=URL))
 
@@ -88,6 +89,7 @@ async def fetch_content(url, session):
 
 @a_timer
 async def main_a():
+    """main asynchronous function"""
     tasks = []
     async with aiohttp.ClientSession() as session:
         for i in range(10):
